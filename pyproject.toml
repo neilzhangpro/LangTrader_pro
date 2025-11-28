@@ -1,0 +1,12 @@
+[project]
+name = "langtrader-v0-2-0"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "psycopg2-binary>=2.9.11",
+    "python-dotenv>=1.2.1",
+    "sqlalchemy>=2.0.44",
+    "sqlmodel>=0.0.27",
+]
