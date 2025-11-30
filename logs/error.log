@@ -1,0 +1,74 @@
+2025-11-30 12:22:33 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: AutoTrader.__init__() missing 1 required positional argument: 'settings'
+2025-11-30 12:22:33 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: AutoTrader.__init__() missing 1 required positional argument: 'settings'
+2025-11-30 12:22:33 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: AutoTrader.__init__() missing 1 required positional argument: 'settings'
+2025-11-30 12:22:33 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: AutoTrader.__init__() missing 1 required positional argument: 'settings'
+2025-11-30 12:23:03 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:03 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:03 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:03 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:27 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:27 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:27 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:27 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:50 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:50 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:50 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:23:50 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:24:56 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:24:56 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:24:56 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:24:56 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'id'
+2025-11-30 12:26:54 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'cfg'
+2025-11-30 12:26:54 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'cfg'
+2025-11-30 12:26:54 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'cfg'
+2025-11-30 12:26:54 | ERROR | services.trader_manager:_load_single_trader:331 | ❌ 创建 trader 实例失败: 'dict' object has no attribute 'cfg'
+2025-11-30 12:44:32 | ERROR | services.trader_manager:start_trader:359 | ❌ 交易员 10000000-0000-0000-0000-000000000001 不存在
+2025-11-30 20:29:57 | ERROR | services.prompt_service:get_prompt_by_trader:65 | Error getting prompt by trader: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "non_existent_trader_id"
+LINE 3: WHERE traders.id = 'non_existent_trader_id'
+                           ^
+
+[SQL: SELECT traders.id, traders.created_at, traders.updated_at, traders.user_id, traders.name, traders.ai_model_id, traders.exchange_id, traders.initial_balance, traders.scan_interval_minutes, traders.is_running, traders.btc_eth_leverage, traders.altcoin_leverage, traders.trading_symbols, traders.use_default_coins, traders.custom_coins, traders.use_coin_pool, traders.use_oi_top, traders.use_inside_coins, traders.system_prompt_template, traders.custom_prompt, traders.override_base_prompt, traders.is_cross_margin, traders.decision_graph_config 
+FROM traders 
+WHERE traders.id = %(id_1)s]
+[parameters: {'id_1': 'non_existent_trader_id'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+2025-11-30 20:30:20 | ERROR | services.prompt_service:get_prompt_by_trader:65 | Error getting prompt by trader: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "non_existent_trader_id"
+LINE 3: WHERE traders.id = 'non_existent_trader_id'
+                           ^
+
+[SQL: SELECT traders.id, traders.created_at, traders.updated_at, traders.user_id, traders.name, traders.ai_model_id, traders.exchange_id, traders.initial_balance, traders.scan_interval_minutes, traders.is_running, traders.btc_eth_leverage, traders.altcoin_leverage, traders.trading_symbols, traders.use_default_coins, traders.custom_coins, traders.use_coin_pool, traders.use_oi_top, traders.use_inside_coins, traders.system_prompt_template, traders.custom_prompt, traders.override_base_prompt, traders.is_cross_margin, traders.decision_graph_config 
+FROM traders 
+WHERE traders.id = %(id_1)s]
+[parameters: {'id_1': 'non_existent_trader_id'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+2025-11-30 20:30:21 | ERROR | services.trader_manager:start_trader:361 | ❌ 交易员 non_existent_trader_id 不存在
+2025-11-30 20:30:21 | ERROR | services.trader_manager:stop_trader:379 | ❌ 交易员 non_existent_trader_id 不存在
+2025-11-30 20:54:30 | ERROR | services.Auto_trader:_scan_once:93 | ❌ 交易员 test_trader 扫描一次错误: '_GeneratorContextManager' object has no attribute 'query'
+2025-11-30 21:00:58 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 'ExchangeService' object has no attribute 'exchange_cfg'
+2025-11-30 21:00:58 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 'ExchangeService' object has no attribute 'exchange_cfg'
+2025-11-30 21:00:58 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 'ExchangeService' object has no attribute 'exchange_cfg'
+2025-11-30 21:00:58 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 'ExchangeService' object has no attribute 'exchange_cfg'
+2025-11-30 21:00:58 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 'ExchangeService' object has no attribute 'exchange_cfg'
+2025-11-30 21:00:58 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 'ExchangeService' object has no attribute 'exchange_cfg'
+2025-11-30 21:00:58 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 'ExchangeService' object has no attribute 'exchange_cfg'
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_cex:57 | ❌ 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_cex:57 | ❌ 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:34 | ❌ 不支持的交易所类型: CEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所类型: CEX
+2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所类型: CEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:34 | ❌ 不支持的交易所类型: CEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所类型: CEX
+2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所类型: CEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:34 | ❌ 不支持的交易所类型: DEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所类型: DEX
+2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所类型: DEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:34 | ❌ 不支持的交易所类型: DEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所类型: DEX
+2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所类型: DEX
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_cex:57 | ❌ 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所: test_exchange
+2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所: test_exchange

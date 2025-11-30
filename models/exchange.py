@@ -13,10 +13,5 @@ class Exchange(BaseModel, table=True):
     secret_key: str = Field(default="")
     testnet: bool = Field(default=False)
     
-    # Hyperliquid 特定字段
-    hyperliquid_wallet_addr: str = Field(default="", max_length=255)
-    
-    # Aster 特定字段
-    aster_user: str = Field(default="", max_length=255)
-    aster_signer: str = Field(default="", max_length=255)
-    aster_private_key: str = Field(default="")
+    # 钱包
+    wallet_address: str = Field(default="", max_length=255)
