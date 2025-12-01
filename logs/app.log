@@ -1320,3 +1320,151 @@ WHERE traders.id = %(id_1)s]
 2025-11-30 21:48:10 | INFO | services.trader_manager:start_trader:363 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已启动
 2025-11-30 21:48:20 | INFO | services.Auto_trader:stop:59 | Trader Trader Beta stopped
 2025-11-30 21:48:20 | INFO | services.trader_manager:stop_trader:381 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已停止
+2025-12-01 10:10:54 | INFO | services.trader_manager:load_traders_from_database:38 | 📋 发现 1 个用户，开始加载所有交易员配置...
+2025-12-01 10:10:54 | INFO | services.trader_manager:load_traders_from_database:49 | 📋 用户 22222222-2222-2222-2222-222222222222: 1 个交易员
+2025-12-01 10:10:54 | INFO | services.trader_manager:load_traders_from_database:56 | 📋 总共加载 1 个交易员配置
+2025-12-01 10:10:54 | INFO | services.trader_manager:_load_single_trader:278 | 🔍 用户 22222222-2222-2222-2222-222222222222 暂未配置信号源
+2025-12-01 10:10:54 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:10:54 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:10:54 | ERROR | services.ExchangeService:_init_ccxt_exchange:39 | ❌ 初始化 CCXT 交易所失败: Can't instantiate abstract class hyperliquid_trader without an implementation for abstract methods 'cancelAllOrders', 'closeLong', 'closeShort', 'formatQuantity', 'getMarketPrice', 'get_all_position', 'get_balance', 'openLong', 'openShort', 'setLeverage', 'setMarginMode', 'setStopLoss', 'setTakeProfit'
+2025-12-01 10:10:54 | ERROR | services.trader_manager:_load_single_trader:327 | ❌ 创建 trader 实例失败: Can't instantiate abstract class hyperliquid_trader without an implementation for abstract methods 'cancelAllOrders', 'closeLong', 'closeShort', 'formatQuantity', 'getMarketPrice', 'get_all_position', 'get_balance', 'openLong', 'openShort', 'setLeverage', 'setMarginMode', 'setStopLoss', 'setTakeProfit'
+2025-12-01 10:10:54 | INFO | services.trader_manager:load_traders_from_database:66 | 📋 成功加载 0 个交易员配置
+2025-12-01 10:10:54 | INFO | services.trader_manager:load_traders_from_database:67 | 📋 失败加载 1 个交易员配置
+2025-12-01 10:12:40 | INFO | services.trader_manager:load_traders_from_database:38 | 📋 发现 1 个用户，开始加载所有交易员配置...
+2025-12-01 10:12:40 | INFO | services.trader_manager:load_traders_from_database:49 | 📋 用户 22222222-2222-2222-2222-222222222222: 1 个交易员
+2025-12-01 10:12:40 | INFO | services.trader_manager:load_traders_from_database:56 | 📋 总共加载 1 个交易员配置
+2025-12-01 10:12:40 | INFO | services.trader_manager:_load_single_trader:278 | 🔍 用户 22222222-2222-2222-2222-222222222222 暂未配置信号源
+2025-12-01 10:12:40 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:12:40 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:12:40 | ERROR | services.ExchangeService:_init_ccxt_exchange:39 | ❌ 初始化 CCXT 交易所失败: module 'utils.logger' has no attribute 'info'
+2025-12-01 10:12:40 | ERROR | services.trader_manager:_load_single_trader:327 | ❌ 创建 trader 实例失败: module 'utils.logger' has no attribute 'info'
+2025-12-01 10:12:40 | INFO | services.trader_manager:load_traders_from_database:66 | 📋 成功加载 0 个交易员配置
+2025-12-01 10:12:40 | INFO | services.trader_manager:load_traders_from_database:67 | 📋 失败加载 1 个交易员配置
+2025-12-01 10:13:24 | INFO | services.trader_manager:load_traders_from_database:38 | 📋 发现 1 个用户，开始加载所有交易员配置...
+2025-12-01 10:13:24 | INFO | services.trader_manager:load_traders_from_database:49 | 📋 用户 22222222-2222-2222-2222-222222222222: 1 个交易员
+2025-12-01 10:13:24 | INFO | services.trader_manager:load_traders_from_database:56 | 📋 总共加载 1 个交易员配置
+2025-12-01 10:13:24 | INFO | services.trader_manager:_load_single_trader:278 | 🔍 用户 22222222-2222-2222-2222-222222222222 暂未配置信号源
+2025-12-01 10:13:24 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:13:24 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:13:24 | INFO | services.trader.hyperliquid_trder:__init__:8 | Hyperliquid 交易所初始化
+2025-12-01 10:13:24 | INFO | services.trader.hyperliquid_trder:__init__:10 | Hyperliquid 交易所配置: {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:13:24 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 10:13:24 | INFO | services.Auto_trader:__init__:29 | Trader Trader Beta initialized
+2025-12-01 10:13:24 | INFO | services.trader_manager:_load_single_trader:324 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已加载
+2025-12-01 10:13:24 | INFO | services.trader_manager:load_traders_from_database:66 | 📋 成功加载 1 个交易员配置
+2025-12-01 10:13:24 | INFO | services.trader_manager:load_traders_from_database:67 | 📋 失败加载 0 个交易员配置
+2025-12-01 10:13:24 | INFO | services.Auto_trader:_scan_once:89 | 🔍 [Trader Beta] 执行扫描...
+2025-12-01 10:13:24 | INFO | services.Auto_trader:_scan_once:91 | 📊 [Trader Beta] LangGraph 决策引擎运行中...
+2025-12-01 10:13:24 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:13:24 | INFO | services.Auto_trader:start:46 | Trader Trader Beta started
+2025-12-01 10:13:24 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:13:24 | INFO | services.trader.hyperliquid_trder:__init__:8 | Hyperliquid 交易所初始化
+2025-12-01 10:13:24 | INFO | services.trader.hyperliquid_trder:__init__:10 | Hyperliquid 交易所配置: {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:13:24 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 10:13:24 | INFO | services.trader_manager:start_trader:363 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已启动
+2025-12-01 10:13:34 | INFO | services.Auto_trader:stop:59 | Trader Trader Beta stopped
+2025-12-01 10:13:34 | INFO | services.trader_manager:stop_trader:381 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已停止
+2025-12-01 10:22:08 | INFO | services.trader_manager:load_traders_from_database:38 | 📋 发现 1 个用户，开始加载所有交易员配置...
+2025-12-01 10:22:08 | INFO | services.trader_manager:load_traders_from_database:49 | 📋 用户 22222222-2222-2222-2222-222222222222: 1 个交易员
+2025-12-01 10:22:08 | INFO | services.trader_manager:load_traders_from_database:56 | 📋 总共加载 1 个交易员配置
+2025-12-01 10:22:08 | INFO | services.trader_manager:_load_single_trader:278 | 🔍 用户 22222222-2222-2222-2222-222222222222 暂未配置信号源
+2025-12-01 10:22:08 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:22:08 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:22:08 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 10:22:10 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 10:22:11 | INFO | services.trader.hyperliquid_trder:__init__:34 | 账户余额: %s
+2025-12-01 10:22:11 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 10:22:11 | INFO | services.Auto_trader:__init__:29 | Trader Trader Beta initialized
+2025-12-01 10:22:11 | INFO | services.trader_manager:_load_single_trader:324 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已加载
+2025-12-01 10:22:11 | INFO | services.trader_manager:load_traders_from_database:66 | 📋 成功加载 1 个交易员配置
+2025-12-01 10:22:11 | INFO | services.trader_manager:load_traders_from_database:67 | 📋 失败加载 0 个交易员配置
+2025-12-01 10:22:11 | INFO | services.Auto_trader:_scan_once:89 | 🔍 [Trader Beta] 执行扫描...
+2025-12-01 10:22:11 | INFO | services.Auto_trader:start:46 | Trader Trader Beta started
+2025-12-01 10:22:11 | INFO | services.Auto_trader:_scan_once:91 | 📊 [Trader Beta] LangGraph 决策引擎运行中...
+2025-12-01 10:22:11 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:22:11 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:22:11 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 10:22:11 | INFO | services.trader_manager:start_trader:363 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已启动
+2025-12-01 10:22:13 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 10:22:13 | INFO | services.trader.hyperliquid_trder:__init__:34 | 账户余额: %s
+2025-12-01 10:22:13 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 10:22:21 | INFO | services.Auto_trader:stop:59 | Trader Trader Beta stopped
+2025-12-01 10:22:21 | INFO | services.trader_manager:stop_trader:381 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已停止
+2025-12-01 10:23:52 | INFO | services.trader_manager:load_traders_from_database:38 | 📋 发现 1 个用户，开始加载所有交易员配置...
+2025-12-01 10:23:52 | INFO | services.trader_manager:load_traders_from_database:49 | 📋 用户 22222222-2222-2222-2222-222222222222: 1 个交易员
+2025-12-01 10:23:52 | INFO | services.trader_manager:load_traders_from_database:56 | 📋 总共加载 1 个交易员配置
+2025-12-01 10:23:52 | INFO | services.trader_manager:_load_single_trader:278 | 🔍 用户 22222222-2222-2222-2222-222222222222 暂未配置信号源
+2025-12-01 10:23:52 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:23:52 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:23:52 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 10:23:55 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 10:23:55 | INFO | services.trader.hyperliquid_trder:__init__:34 | 账户余额: %s
+2025-12-01 10:23:55 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 10:23:55 | INFO | services.Auto_trader:__init__:29 | Trader Trader Beta initialized
+2025-12-01 10:23:55 | INFO | services.trader_manager:_load_single_trader:324 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已加载
+2025-12-01 10:23:55 | INFO | services.trader_manager:load_traders_from_database:66 | 📋 成功加载 1 个交易员配置
+2025-12-01 10:23:55 | INFO | services.trader_manager:load_traders_from_database:67 | 📋 失败加载 0 个交易员配置
+2025-12-01 10:23:55 | INFO | services.Auto_trader:_scan_once:89 | 🔍 [Trader Beta] 执行扫描...
+2025-12-01 10:23:55 | INFO | services.Auto_trader:start:46 | Trader Trader Beta started
+2025-12-01 10:23:55 | INFO | services.Auto_trader:_scan_once:91 | 📊 [Trader Beta] LangGraph 决策引擎运行中...
+2025-12-01 10:23:55 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 10:23:55 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 10:23:55 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 10:23:55 | INFO | services.trader_manager:start_trader:363 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已启动
+2025-12-01 10:23:57 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 10:23:57 | INFO | services.trader.hyperliquid_trder:__init__:34 | 账户余额: %s
+2025-12-01 10:23:57 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 10:24:05 | INFO | services.Auto_trader:stop:59 | Trader Trader Beta stopped
+2025-12-01 10:24:05 | INFO | services.trader_manager:stop_trader:381 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已停止
+2025-12-01 15:40:44 | INFO | services.trader_manager:load_traders_from_database:38 | 📋 发现 1 个用户，开始加载所有交易员配置...
+2025-12-01 15:40:44 | INFO | services.trader_manager:load_traders_from_database:49 | 📋 用户 22222222-2222-2222-2222-222222222222: 1 个交易员
+2025-12-01 15:40:44 | INFO | services.trader_manager:load_traders_from_database:56 | 📋 总共加载 1 个交易员配置
+2025-12-01 15:40:44 | INFO | services.trader_manager:_load_single_trader:278 | 🔍 用户 22222222-2222-2222-2222-222222222222 暂未配置信号源
+2025-12-01 15:40:44 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 15:40:44 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 15:40:44 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 15:40:45 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 15:40:46 | INFO | services.trader.hyperliquid_trder:__init__:34 | 账户余额: %s
+2025-12-01 15:40:46 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 15:40:46 | INFO | services.Auto_trader:__init__:29 | Trader Trader Beta initialized
+2025-12-01 15:40:46 | INFO | services.trader_manager:_load_single_trader:324 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已加载
+2025-12-01 15:40:46 | INFO | services.trader_manager:load_traders_from_database:66 | 📋 成功加载 1 个交易员配置
+2025-12-01 15:40:46 | INFO | services.trader_manager:load_traders_from_database:67 | 📋 失败加载 0 个交易员配置
+2025-12-01 15:40:46 | INFO | services.Auto_trader:_scan_once:89 | 🔍 [Trader Beta] 执行扫描...
+2025-12-01 15:40:46 | INFO | services.Auto_trader:_scan_once:91 | 📊 [Trader Beta] LangGraph 决策引擎运行中...
+2025-12-01 15:40:46 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 15:40:46 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 15:40:46 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 15:40:46 | INFO | services.Auto_trader:start:46 | Trader Trader Beta started
+2025-12-01 15:40:46 | INFO | services.trader_manager:start_trader:363 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已启动
+2025-12-01 15:40:48 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 15:40:49 | INFO | services.trader.hyperliquid_trder:__init__:34 | 账户余额: %s
+2025-12-01 15:40:49 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 15:40:56 | INFO | services.Auto_trader:stop:59 | Trader Trader Beta stopped
+2025-12-01 15:40:56 | INFO | services.trader_manager:stop_trader:381 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已停止
+2025-12-01 15:42:45 | INFO | services.trader_manager:load_traders_from_database:38 | 📋 发现 1 个用户，开始加载所有交易员配置...
+2025-12-01 15:42:45 | INFO | services.trader_manager:load_traders_from_database:49 | 📋 用户 22222222-2222-2222-2222-222222222222: 1 个交易员
+2025-12-01 15:42:45 | INFO | services.trader_manager:load_traders_from_database:56 | 📋 总共加载 1 个交易员配置
+2025-12-01 15:42:45 | INFO | services.trader_manager:_load_single_trader:278 | 🔍 用户 22222222-2222-2222-2222-222222222222 暂未配置信号源
+2025-12-01 15:42:45 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 15:42:45 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 15:42:45 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 15:42:47 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 15:42:47 | INFO | services.trader.hyperliquid_trder:__init__:36 | 账户余额: 12.425695
+2025-12-01 15:42:47 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 15:42:47 | INFO | services.Auto_trader:__init__:29 | Trader Trader Beta initialized
+2025-12-01 15:42:47 | INFO | services.trader_manager:_load_single_trader:324 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已加载
+2025-12-01 15:42:47 | INFO | services.trader_manager:load_traders_from_database:66 | 📋 成功加载 1 个交易员配置
+2025-12-01 15:42:47 | INFO | services.trader_manager:load_traders_from_database:67 | 📋 失败加载 0 个交易员配置
+2025-12-01 15:42:47 | INFO | services.Auto_trader:_scan_once:89 | 🔍 [Trader Beta] 执行扫描...
+2025-12-01 15:42:47 | INFO | services.Auto_trader:_scan_once:91 | 📊 [Trader Beta] LangGraph 决策引擎运行中...
+2025-12-01 15:42:47 | INFO | services.Auto_trader:start:46 | Trader Trader Beta started
+2025-12-01 15:42:47 | INFO | services.ExchangeService:__init__:18 | Exchange 50000000-0000-0000-0000-000000000002 initialized
+2025-12-01 15:42:47 | INFO | services.ExchangeService:__init__:19 | Exchange {'id': UUID('50000000-0000-0000-0000-000000000002'), 'name': 'Hyperliquid', 'type': 'DEX', 'api_key': None, 'secret_key': '0x7035ba58a62b854d491493ce29903fbfdf4bbd2a5cee09b87ffbef5767af26a4', 'testnet': False, 'wallet_address': '0x67F4e9b07D809a5Fc6d14aaEeF5AB479867F8e81'}
+2025-12-01 15:42:47 | INFO | services.trader.hyperliquid_trder:__init__:12 | Hyperliquid 交易所初始化
+2025-12-01 15:42:47 | INFO | services.trader_manager:start_trader:363 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已启动
+2025-12-01 15:42:49 | INFO | services.trader.hyperliquid_trder:__init__:33 | Hyperliquid 交易所初始化成功
+2025-12-01 15:42:49 | INFO | services.trader.hyperliquid_trder:__init__:36 | 账户余额: 12.402835
+2025-12-01 15:42:49 | INFO | services.ExchangeService:_init_dex:78 | 初始化 DEX 交易所成功
+2025-12-01 15:42:57 | INFO | services.Auto_trader:stop:59 | Trader Trader Beta stopped
+2025-12-01 15:42:57 | INFO | services.trader_manager:stop_trader:381 | ✓ 交易员 10000000-0000-0000-0000-000000000002 已停止

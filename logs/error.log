@@ -72,3 +72,7 @@ WHERE traders.id = %(id_1)s]
 2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_cex:57 | ❌ 不支持的交易所: test_exchange
 2025-11-30 21:17:36 | ERROR | services.ExchangeService:_init_ccxt_exchange:37 | ❌ 初始化 CCXT 交易所失败: 不支持的交易所: test_exchange
 2025-11-30 21:17:36 | ERROR | services.trader_manager:_load_single_trader:333 | ❌ 创建 trader 实例失败: 不支持的交易所: test_exchange
+2025-12-01 10:10:54 | ERROR | services.ExchangeService:_init_ccxt_exchange:39 | ❌ 初始化 CCXT 交易所失败: Can't instantiate abstract class hyperliquid_trader without an implementation for abstract methods 'cancelAllOrders', 'closeLong', 'closeShort', 'formatQuantity', 'getMarketPrice', 'get_all_position', 'get_balance', 'openLong', 'openShort', 'setLeverage', 'setMarginMode', 'setStopLoss', 'setTakeProfit'
+2025-12-01 10:10:54 | ERROR | services.trader_manager:_load_single_trader:327 | ❌ 创建 trader 实例失败: Can't instantiate abstract class hyperliquid_trader without an implementation for abstract methods 'cancelAllOrders', 'closeLong', 'closeShort', 'formatQuantity', 'getMarketPrice', 'get_all_position', 'get_balance', 'openLong', 'openShort', 'setLeverage', 'setMarginMode', 'setStopLoss', 'setTakeProfit'
+2025-12-01 10:12:40 | ERROR | services.ExchangeService:_init_ccxt_exchange:39 | ❌ 初始化 CCXT 交易所失败: module 'utils.logger' has no attribute 'info'
+2025-12-01 10:12:40 | ERROR | services.trader_manager:_load_single_trader:327 | ❌ 创建 trader 实例失败: module 'utils.logger' has no attribute 'info'

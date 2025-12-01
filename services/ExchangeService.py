@@ -4,6 +4,7 @@ import ccxt
 from utils.logger import logger
 from sqlmodel import select
 from typing import Optional
+from services.trader.hyperliquid_trder import hyperliquid_trader
 
 class ExchangeService:
     """
@@ -73,7 +74,7 @@ class ExchangeService:
         exchange_name = self.exchange_config.get('name').lower()
         if exchange_name == 'hyperliquid':
             #TODO: 初始化 Hyperliquid 交易所
-            logger.info(f"初始化 Hyperliquid 交易所")
+            self.hyperliquid_trader = hyperliquid_trader(self.exchange_config)
         logger.info(f"初始化 DEX 交易所成功")
         pass
 
