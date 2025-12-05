@@ -32,8 +32,8 @@ class hyperliquid_trader(ExchangeInterface):
         self.info = Info(api_url, skip_ws=True)
         logger.info(f"Hyperliquid 交易所初始化成功")
         # 修复：使用正确的 f-string 格式化
-        balance = self.get_balance('')
-        logger.info(f"账户余额: {balance}")
+        #balance = self.get_balance('')
+        #logger.info(f"账户余额: {balance}")
 
     
     def get_balance(self, symbol: str) -> Decimal:

@@ -136,6 +136,7 @@ class TraderManager:
             'user_id': trader_cfg_dict['user_id'],
             'ai_model': {
                 'id': ai_model_dict['id'],
+                'enabled': ai_model_dict['enabled'],
                 'provider': ai_model_dict['provider'],
                 'api_key': ai_model_dict['api_key'],
                 'base_url': ai_model_dict['base_url'],
@@ -231,6 +232,7 @@ class TraderManager:
             # 在会话内提取 ai_model 的所有属性值
             ai_model_dict = {
                 'id': ai_model.id,
+                'enabled': ai_model.enabled,
                 'provider': ai_model.provider,
                 'api_key': ai_model.api_key,
                 'base_url': ai_model.base_url,

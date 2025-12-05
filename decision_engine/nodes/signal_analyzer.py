@@ -117,7 +117,7 @@ class SignalAnalyzer:
                 continue
         
         state['signal_data_map'] = signal_data_map
-        logger.debug(f"📝 signal_data_map: {signal_data_map}")
+        #logger.debug(f"📝 signal_data_map: {signal_data_map}")
         logger.info(f"✅ 完成信号分析，共 {len(signal_data_map)} 个币种")
         return state
 

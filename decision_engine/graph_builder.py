@@ -7,19 +7,21 @@ from typing import Optional
 from services.market.monitor import MarketMonitor
 from decision_engine.nodes.signal_analyzer import SignalAnalyzer
 from decision_engine.nodes.AI_decision import AIDecision
+from services.ExchangeService import ExchangeService
 
 class GraphBuilder:
-    def __init__(self, exchange_config: dict, market_monitor: Optional[MarketMonitor] = None, trader_cfg: Optional[dict] = None):
+    def __init__(self, exchange_config: dict, market_monitor: Optional[MarketMonitor] = None, trader_cfg: Optional[dict] = None, exchange_service: Optional[ExchangeService] = None):
         self.graph = StateGraph(DecisionState)
         self.exchange_config = exchange_config
         self.market_monitor = market_monitor
         self.trader_cfg = trader_cfg or {}
-        
+        self.exchange_service = exchange_service
         # 创建节点实例
         self.data_collector = DataCollector(exchange_config, market_monitor)
         self.coin_pool = CoinPool(trader_cfg)
         self.signal_analyzer = SignalAnalyzer(exchange_config)
-        self.AI_decision = AIDecision()
+        self.AI_decision = AIDecision(exchange_config,trader_cfg,exchange_service)
+
 
     def build_graph(self):
         """构建决策引擎图（批量模式）"""

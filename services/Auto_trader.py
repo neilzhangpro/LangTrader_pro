@@ -9,6 +9,7 @@ from decision_engine.graph_builder import GraphBuilder
 from decision_engine.state import DecisionState
 from services.market.monitor import MarketMonitor
 import asyncio
+from services.ExchangeService import ExchangeService
 
 class AutoTrader:
     """
@@ -115,7 +116,8 @@ class AutoTrader:
             graph_builder = GraphBuilder(
                 self.exchange_service.exchange_config,
                 trader_cfg=self.trader_cfg,
-                market_monitor=self.market_monitor
+                market_monitor=self.market_monitor,
+                exchange_service=self.exchange_service
             )
             graph = graph_builder.build_graph()
             

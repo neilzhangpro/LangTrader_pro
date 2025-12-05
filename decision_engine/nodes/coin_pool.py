@@ -53,7 +53,7 @@ class CoinPool:
         # 4. 如果没有从信号源获取到，使用配置的币种
         if not candidate_coins:
             #从数据库读取配置的币种
-            trading_coins = self.trader_cfg.get('trading_symbols', ["BTC/USDT"])
+            trading_coins = self.trader_cfg.get('trading_coins', ["BTC/USDT"])
             if trading_coins:
                 candidate_coins = trading_coins if isinstance(trading_coins, list) else trading_coins.split(',')
                 logger.info(f"✅ 使用配置的币种: {candidate_coins}")
