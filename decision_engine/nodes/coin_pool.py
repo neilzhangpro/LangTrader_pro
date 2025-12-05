@@ -1,14 +1,20 @@
 from decision_engine.state import DecisionState
 from utils.logger import logger
-from typing import List, Dict
+from typing import List, Dict, Optional
 import requests
 import json
+
+# 前向引用，避免循环导入
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from services.market.symbol_filter import SymbolFilter
 
 class CoinPool:
     """候选币种池节点 - 从信号源获取候选币种列表"""
     
-    def __init__(self, trader_cfg: dict):
+    def __init__(self, trader_cfg: dict, symbol_filter: Optional['SymbolFilter'] = None):
         self.trader_cfg = trader_cfg
+        self.symbol_filter = symbol_filter  # 接收 SymbolFilter 引用（对应 Nofx 的 FilterSymbol）
 
     def get_candidate_coins(self, state: DecisionState) -> DecisionState:
         """获取候选币种列表"""
@@ -45,10 +51,48 @@ class CoinPool:
                 except Exception as e:
                     logger.error(f"❌ 获取 OI Top 失败: {e}")
         
-        # 3. Inside Coins - 内置AI评分（未来实现）
+        # 3. Inside Coins - 内置AI评分（从 SymbolFilter 获取筛选后的币种）
         if self.trader_cfg.get('use_inside_coins'):
-            # TODO: 实现内置AI评分逻辑
-            logger.info("⚠️  Inside Coins 功能待实现")
+            if self.symbol_filter:
+                # 从 SymbolFilter 获取筛选后的币种（对应 Nofx 的 FilterSymbol）
+                filtered_symbols = self.symbol_filter.get_filtered_symbols()
+                
+                # 如果筛选结果为空，且筛选任务正在运行，必须等待筛选完成
+                if not filtered_symbols:
+                    if hasattr(self.symbol_filter, '_running') and self.symbol_filter._running:
+                        logger.info("⏳ 内置AI评分正在运行中，等待筛选结果完成...")
+                        import time
+                        
+                        # 等待筛选完成（最多等待10分钟，每2秒检查一次）
+                        max_wait_time = 600  # 10分钟
+                        check_interval = 2  # 每2秒检查一次
+                        elapsed = 0
+                        
+                        while elapsed < max_wait_time:
+                            time.sleep(check_interval)
+                            elapsed += check_interval
+                            
+                            filtered_symbols = self.symbol_filter.get_filtered_symbols()
+                            if filtered_symbols:
+                                logger.info(f"✅ 等待 {elapsed} 秒后，获取到 {len(filtered_symbols)} 个筛选币种")
+                                break
+                            
+                            # 每10秒输出一次等待日志
+                            if elapsed % 10 == 0:
+                                logger.info(f"⏳ 继续等待筛选结果... ({elapsed}/{max_wait_time}秒)")
+                        
+                        if not filtered_symbols:
+                            logger.error(f"❌ 等待 {max_wait_time} 秒后筛选结果仍未准备好，使用配置币种")
+                    else:
+                        logger.warning("⚠️ 内置AI评分筛选任务未运行，使用配置币种")
+                
+                # 如果获取到筛选结果，添加到候选列表
+                if filtered_symbols:
+                    candidate_coins.extend(filtered_symbols)
+                    coin_sources.update({symbol: coin_sources.get(symbol, []) + ['inside_ai'] for symbol in filtered_symbols})
+                    logger.info(f"✅ 从内置AI评分获取 {len(filtered_symbols)} 个币种: {filtered_symbols[:5]}...")
+            else:
+                logger.warning("⚠️ SymbolFilter 未提供，无法使用内置AI评分")
         
         # 4. 如果没有从信号源获取到，使用配置的币种
         if not candidate_coins:

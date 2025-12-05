@@ -9,8 +9,20 @@ from decision_engine.nodes.signal_analyzer import SignalAnalyzer
 from decision_engine.nodes.AI_decision import AIDecision
 from services.ExchangeService import ExchangeService
 
+# 前向引用，避免循环导入
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from services.market.symbol_filter import SymbolFilter
+
 class GraphBuilder:
-    def __init__(self, exchange_config: dict, market_monitor: Optional[MarketMonitor] = None, trader_cfg: Optional[dict] = None, exchange_service: Optional[ExchangeService] = None):
+    def __init__(
+        self, 
+        exchange_config: dict, 
+        market_monitor: Optional[MarketMonitor] = None, 
+        trader_cfg: Optional[dict] = None, 
+        exchange_service: Optional[ExchangeService] = None,
+        symbol_filter: Optional['SymbolFilter'] = None
+    ):
         self.graph = StateGraph(DecisionState)
         self.exchange_config = exchange_config
         self.market_monitor = market_monitor
@@ -18,7 +30,7 @@ class GraphBuilder:
         self.exchange_service = exchange_service
         # 创建节点实例
         self.data_collector = DataCollector(exchange_config, market_monitor)
-        self.coin_pool = CoinPool(trader_cfg)
+        self.coin_pool = CoinPool(trader_cfg, symbol_filter=symbol_filter)  # 传递 symbol_filter
         self.signal_analyzer = SignalAnalyzer(exchange_config)
         self.AI_decision = AIDecision(exchange_config,trader_cfg,exchange_service)
 

@@ -8,8 +8,10 @@ from services.ExchangeService import ExchangeService
 from decision_engine.graph_builder import GraphBuilder
 from decision_engine.state import DecisionState
 from services.market.monitor import MarketMonitor
+from services.market.historical_loader import HistoricalDataLoader
+from services.market.symbol_scorer import SymbolScorer
+from services.market.symbol_filter import SymbolFilter
 import asyncio
-from services.ExchangeService import ExchangeService
 
 class AutoTrader:
     """
@@ -26,9 +28,26 @@ class AutoTrader:
             settings=settings
         )
         
-
-         # 创建市场数据监控器（后台运行WebSocket）
+        # 创建市场数据监控器（后台运行WebSocket）
         self.market_monitor = MarketMonitor(self.exchange_service.exchange_config)
+        
+        # 创建历史数据加载器
+        self.historical_loader = HistoricalDataLoader(self.market_monitor.api_client)
+        
+        # 创建币种评分器
+        ai_model_config = self.trader_cfg.get('ai_model', {})
+        self.symbol_scorer = SymbolScorer(ai_model_config)
+        
+        # 创建币种筛选器（如果启用内置评分）
+        self.symbol_filter: Optional[SymbolFilter] = None
+        if self.trader_cfg.get('use_inside_coins', False):
+            # 注意：all_symbols 将在 start() 时初始化
+            self.symbol_filter = SymbolFilter(
+                self.market_monitor,
+                self.symbol_scorer,
+                all_symbols=[],  # 将在 start() 时填充
+                running_flag=None  # 将在 start() 时设置
+            )
 
         #运行状态
         self.is_running = False
@@ -49,6 +68,39 @@ class AutoTrader:
         # 启动市场数据监控器
         self.market_monitor.start()
         logger.info(f"✅ 市场数据监控器已启动")
+        
+        # 如果启用内置AI评分，初始化所有币种并启动筛选任务
+        if self.trader_cfg.get('use_inside_coins', False) and self.symbol_filter:
+            logger.info("🚀 启用内置AI评分，开始初始化所有币种...")
+            # 在后台线程中初始化（避免阻塞）
+            def init_all_symbols():
+                try:
+                    # 1. 获取所有可交易币种
+                    all_symbols = self.historical_loader.get_all_tradable_symbols()
+                    logger.info(f"找到 {len(all_symbols)} 个交易对")
+                    
+                    # 2. 加载历史数据到monitor缓存
+                    success_count = self.historical_loader.load_historical_data(
+                        all_symbols,
+                        ["3m", "4h"],
+                        self.market_monitor.kline_cache,
+                        self.market_monitor._cache_lock
+                    )
+                    logger.info(f"✅ 历史数据加载完成，成功加载 {success_count}/{len(all_symbols)} 个币种")
+                    
+                    # 3. 更新 symbol_filter 的 all_symbols 和 running_flag
+                    self.symbol_filter.all_symbols = all_symbols
+                    self.symbol_filter.running_flag = self._stop_event
+                    
+                    # 4. 启动筛选任务
+                    self.symbol_filter.start()
+                    logger.info("✅ 所有币种初始化完成，内置AI评分已启动")
+                except Exception as e:
+                    logger.error(f"❌ 初始化所有币种失败: {e}", exc_info=True)
+            
+            init_thread = threading.Thread(target=init_all_symbols, daemon=True, name="InitAllSymbols")
+            init_thread.start()
+            logger.info("⏳ 币种初始化任务已在后台启动（约需2分钟）")
         
         # 注意：不再在这里预加载币种
         # 币种会在每次扫描时从信号源动态获取
@@ -71,6 +123,10 @@ class AutoTrader:
         
         self.is_running = False
         self._stop_event.set()
+        
+        # 停止币种筛选任务
+        if self.symbol_filter:
+            self.symbol_filter.stop()
         
         # 停止市场数据监控器
         self.market_monitor.stop()
@@ -117,7 +173,8 @@ class AutoTrader:
                 self.exchange_service.exchange_config,
                 trader_cfg=self.trader_cfg,
                 market_monitor=self.market_monitor,
-                exchange_service=self.exchange_service
+                exchange_service=self.exchange_service,
+                symbol_filter=self.symbol_filter  # 传递 SymbolFilter 引用
             )
             graph = graph_builder.build_graph()
             
