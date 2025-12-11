@@ -6,7 +6,8 @@ from services.market.type import Kline
 class APIClient:
     """REST API 客户端（CCXT）"""
     #固定使用binance的API
-    def __init__(self, exchange_config: dict):
+    def __init__(self):
+        #写死用binance的API了，素以exchange_config参数没用上
         self.exchange = ccxt.binance()
         logger.info(f"APIClient initialized")
         # 初始化时加载市场数据
@@ -58,9 +59,39 @@ class APIClient:
     def get_funding_rate(self, symbol: str):
         """获取资金费率"""
         try:
-            funding_rate = self.exchange.fetch_funding_rate(symbol)
-            logger.info(f"获取到资金费率: {funding_rate}")
-            return funding_rate
+            # 规范化币种并转换为永续合约格式
+            # 处理输入格式: "BTC/USDT" 或 "BTC" 或 "BTCUSDT"
+            normalized = symbol.upper().strip()
+            
+            # 如果包含斜杠，直接使用
+            if '/' in normalized:
+                base, quote = normalized.split('/')
+            else:
+                # 如果没有斜杠，尝试从 "BTCUSDT" 格式提取
+                if normalized.endswith('USDT'):
+                    base = normalized[:-4]
+                    quote = 'USDT'
+                else:
+                    # 默认添加 USDT
+                    base = normalized
+                    quote = 'USDT'
+            
+            # 转换为永续合约格式: BTC/USDT:USDT
+            contract_symbol = f"{base}/{quote}:{quote}"
+            
+            funding_rate_data = self.exchange.fetch_funding_rate(contract_symbol)
+            # 处理返回结果（可能是 dict 或 float）
+            if isinstance(funding_rate_data, dict):
+                funding_rate = funding_rate_data.get('fundingRate') or funding_rate_data.get('rate')
+                if funding_rate is not None:
+                    logger.debug(f"获取到资金费率: {funding_rate}")
+                    return float(funding_rate)
+            elif isinstance(funding_rate_data, (int, float)):
+                logger.debug(f"获取到资金费率: {funding_rate_data}")
+                return float(funding_rate_data)
+            
+            logger.warning(f"⚠️ {symbol} 资金费率数据格式异常: {funding_rate_data}")
+            return None
         except Exception as e:
             logger.error(f"❌ 获取资金费率失败: {e}", exc_info=True)
             return None
@@ -71,7 +102,7 @@ class APIClient:
             symbol = self._normalize_symbol(symbol)
             #使用CCXT获取K线数据
             ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
-            logger.info(f"获取到K线数据: {len(ohlcv)} 根")
+            #logger.info(f"获取到K线数据: {len(ohlcv)} 根")
             
             kline_list = []
             for ohlcv_item in ohlcv:
@@ -106,10 +137,10 @@ class APIClient:
                 )
                 kline_list.append(kline)
             
-            logger.info(f"✅ 成功转换 {len(kline_list)} 根K线数据")
+            #logger.info(f"✅ 成功转换 {len(kline_list)} 根K线数据")
             return kline_list
         except Exception as e:
-            logger.error(f"❌ 获取K线数据失败: {e}", exc_info=True)
+            #logger.error(f"❌ 获取K线数据失败: {e}", exc_info=True)
             return None
     
     def _calculate_close_time(self, open_time: int, timeframe: str) -> int:

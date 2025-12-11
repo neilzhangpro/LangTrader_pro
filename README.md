@@ -332,7 +332,7 @@ LangTrader_v0.2.0/
 │   │   └── api_client.py  # REST API 客户端
 │   └── trader/            # 交易接口
 │       ├── interface.py   # 统一交易接口
-│       └── hyperliquid_trder.py  # Hyperliquid 实现
+│       └── hyperliquid_ccxt_trader.py  # Hyperliquid CCXT 实现
 ├── tests/                 # 测试文件
 ├── utils/                 # 工具类
 │   └── logger.py          # 日志工具

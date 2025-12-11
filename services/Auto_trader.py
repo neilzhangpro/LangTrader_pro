@@ -1,17 +1,13 @@
-from models.trader import Trader
 from utils.logger import logger
 from config.settings import Settings
 import threading
 from typing import Optional
 from datetime import datetime, timedelta
-from services.ExchangeService import ExchangeService
 from decision_engine.graph_builder import GraphBuilder
 from decision_engine.state import DecisionState
 from services.market.monitor import MarketMonitor
 from services.market.historical_loader import HistoricalDataLoader
-from services.market.symbol_scorer import SymbolScorer
 from services.market.symbol_filter import SymbolFilter
-import asyncio
 
 class AutoTrader:
     """
@@ -23,37 +19,44 @@ class AutoTrader:
         self.settings = settings
         self.trader_id = trader_cfg.get('id')
         self.trader_name = trader_cfg.get('name')
-        self.exchange_service = ExchangeService(
-            exchange_config=trader_cfg.get('exchange', {}),
-            settings=settings
-        )
+        self.exchange_config = trader_cfg.get('exchange', {})
         
         # 创建市场数据监控器（后台运行WebSocket）
-        self.market_monitor = MarketMonitor(self.exchange_service.exchange_config)
+        self.market_monitor = MarketMonitor(self.exchange_config)
         
         # 创建历史数据加载器
         self.historical_loader = HistoricalDataLoader(self.market_monitor.api_client)
         
-        # 创建币种评分器
-        ai_model_config = self.trader_cfg.get('ai_model', {})
-        self.symbol_scorer = SymbolScorer(ai_model_config)
-        
-        # 创建币种筛选器（如果启用内置评分）
+        # 创建币种筛选器（如果启用内置评分，整合了评分功能）
         self.symbol_filter: Optional[SymbolFilter] = None
-        if self.trader_cfg.get('use_inside_coins', False):
+        logger.info(f"use_inside_coins: {self.trader_cfg.get('use_inside_coins')}")
+        if self.trader_cfg.get('use_inside_coins'): #如果启用内置AI评分
             # 注意：all_symbols 将在 start() 时初始化
             self.symbol_filter = SymbolFilter(
                 self.market_monitor,
-                self.symbol_scorer,
+                api_client=self.market_monitor.api_client,
                 all_symbols=[],  # 将在 start() 时填充
                 running_flag=None  # 将在 start() 时设置
             )
+            logger.info(f"Set symbol_filter running default is:{self.symbol_filter._running}")
 
         #运行状态
         self.is_running = False
         self._stop_event = threading.Event()
         self._scan_thread: Optional[threading.Thread] = None
         
+        # 运行状态追踪（用于AI决策提示词）
+        self.start_time: Optional[datetime] = None
+        self.call_count = 0
+        
+        #创建图在初始化的时候
+        self.graph = GraphBuilder(
+            market_monitor=self.market_monitor,
+            trader_cfg=self.trader_cfg,
+            symbol_filter=self.symbol_filter,
+            trader_id=self.trader_id,
+            settings=self.settings
+        )
         logger.info(f"Trader {self.trader_name} initialized")
     
     def start(self):
@@ -65,14 +68,25 @@ class AutoTrader:
         self.is_running = True
         self._stop_event.clear()
         
+        # 记录启动时间
+        self.start_time = datetime.now()
+        self.call_count = 0
+        
         # 启动市场数据监控器
         self.market_monitor.start()
         logger.info(f"✅ 市场数据监控器已启动")
         
         # 如果启用内置AI评分，初始化所有币种并启动筛选任务
-        if self.trader_cfg.get('use_inside_coins', False) and self.symbol_filter:
+        if self.trader_cfg.get('use_inside_coins') and self.symbol_filter:
             logger.info("🚀 启用内置AI评分，开始初始化所有币种...")
-            # 在后台线程中初始化（避免阻塞）
+            
+            # 先设置 running_flag，然后立即启动筛选任务（即使数据还没准备好）
+            # 这样筛选任务会在后台等待数据加载完成
+            self.symbol_filter.running_flag = self._stop_event
+            self.symbol_filter.start()  # 立即启动，让它在后台等待数据
+            logger.info("✅ 币种筛选任务已启动（等待数据加载）")
+            
+            # 在后台线程中初始化数据（筛选任务会等待数据准备好）
             def init_all_symbols():
                 try:
                     # 1. 获取所有可交易币种
@@ -88,13 +102,9 @@ class AutoTrader:
                     )
                     logger.info(f"✅ 历史数据加载完成，成功加载 {success_count}/{len(all_symbols)} 个币种")
                     
-                    # 3. 更新 symbol_filter 的 all_symbols 和 running_flag
+                    # 3. 更新 symbol_filter 的 all_symbols（筛选任务会自动使用新数据）
                     self.symbol_filter.all_symbols = all_symbols
-                    self.symbol_filter.running_flag = self._stop_event
-                    
-                    # 4. 启动筛选任务
-                    self.symbol_filter.start()
-                    logger.info("✅ 所有币种初始化完成，内置AI评分已启动")
+                    logger.info("✅ 所有币种初始化完成，筛选任务将使用新数据")
                 except Exception as e:
                     logger.error(f"❌ 初始化所有币种失败: {e}", exc_info=True)
             
@@ -159,44 +169,55 @@ class AutoTrader:
                 
             except Exception as e:
                 logger.error(f"❌ 交易员 {self.trader_name} 扫描循环错误: {e}", exc_info=True)
-                # 出错后等待一段时间再继续
+                # 出错后等待一段时间再继续，并更新下次扫描时间，避免快速失败循环
                 self._stop_event.wait(timeout=60)
+                next_scan_time = datetime.now() + scan_interval
     
     def _scan_once(self):
         """执行单次扫描（批量模式：一次处理所有候选币种）"""
         logger.info(f"🔍 [{self.trader_name}] 执行扫描...")
+        # 增加调用计数
+        self.call_count += 1
+        
         try:
             logger.info(f"📊 [{self.trader_name}] LangGraph 决策引擎运行中...")
             
-            # 构建图（只需要构建一次）
-            graph_builder = GraphBuilder(
-                self.exchange_service.exchange_config,
-                trader_cfg=self.trader_cfg,
-                market_monitor=self.market_monitor,
-                exchange_service=self.exchange_service,
-                symbol_filter=self.symbol_filter  # 传递 SymbolFilter 引用
-            )
-            graph = graph_builder.build_graph()
+            # 延迟构建图（第一次扫描时构建，此时 symbol_filter 可能已经更新）
+            if not hasattr(self, '_compiled_graph') or self._compiled_graph is None:
+                self._compiled_graph = self.graph.build_graph()
+                logger.debug("✅ 图已编译")
+                
+            # 计算运行时长（分钟）
+            runtime_minutes = 0
+            if self.start_time:
+                runtime_delta = datetime.now() - self.start_time
+                runtime_minutes = int(runtime_delta.total_seconds() / 60)
+            
             
             # 初始化状态（批量模式）
             # candidate_symbols 会在 coin_pool 节点中填充
-            # positions 会在 data_collector 节点中获取
-            # account_balance 会在 AI_decision 节点中获取
+            # positions 和 account_balance 会在 data_collector 节点中获取
             decision_state = DecisionState(
+                exchange_config=self.exchange_config,  # 集中管理的交易所配置（ExchangeConfig对象）
                 candidate_symbols=[],  # 初始为空，coin_pool 节点会填充
                 coin_sources={},  # coin_pool 节点会填充
                 oi_top_data_map={},  # coin_pool 节点会填充
-                account_balance=0.0,  # 将在 AI_decision 节点中获取
+                account_balance=0.0,  # 将在 data_collector 节点中获取
                 positions=[],  # 将在 data_collector 节点中获取
                 market_data_map={},  # data_collector 节点会填充
                 signal_data_map={},  # signal_analyzer 节点会填充
+                performance=None,  # signal_analyzer 节点会填充
+                alerts=None,  # signal_analyzer 节点会填充
                 ai_decision=None,  # ai_decision 节点会填充
-                risk_approved=False,  # risk_manager 节点会填充
+                risk_approved=False,  # risk_check 节点会填充
+                execution_results=None,  # execution_trade 节点会填充
+                runtime_minutes=runtime_minutes,  # 运行时长（分钟）
+                call_count=self.call_count,  # 调用次数
             )
             
             # 一次调用处理所有候选币种
             try:
-                final_state = graph.invoke(decision_state)
+                final_state = self._compiled_graph.invoke(decision_state)
                 logger.info(f"✅ 图执行完成")
                 logger.info(f"📊 最终状态 keys: {list(final_state.keys())}")
                 

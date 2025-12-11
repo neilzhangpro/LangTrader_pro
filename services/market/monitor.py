@@ -17,7 +17,7 @@ class MarketMonitor:
     
     def __init__(self, exchange_config: dict):
         self.exchange_config = exchange_config
-        self.api_client = APIClient(exchange_config)
+        self.api_client = APIClient()
         self.ws_client = WSClient()
         
         # 数据缓存

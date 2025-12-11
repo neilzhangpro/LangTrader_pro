@@ -186,7 +186,7 @@ class TraderManager:
             if not trader_cfg:
                 logger.warning(f"⚠️ 交易员 {trader_id} 不存在")
                 return False
-            
+            logger.info(f"trader_cfg from database: {trader_cfg}")
             # 在会话内提取 trader_cfg 的所有属性值
             trader_cfg_dict = {
                 'id': trader_cfg.id,
@@ -359,9 +359,22 @@ class TraderManager:
             
             trader = self.traders[trader_id]
             try:
+                logger.info(f"🔄 正在启动交易员 {trader_id}...")
                 trader.start()
-                # 更新数据库状态
-                self._update_trader_running_status(trader_id, True)
+                logger.info(f"✅ 交易员 {trader_id} 的start()方法已返回")
+                
+                # 更新数据库状态（改为后台执行，避免阻塞）
+                def update_status():
+                    try:
+                        self._update_trader_running_status(trader_id, True)
+                        logger.debug(f"✅ 交易员 {trader_id} 数据库状态已更新")
+                    except Exception as e:
+                        logger.error(f"❌ 更新交易员 {trader_id} 运行状态失败: {e}", exc_info=True)
+                
+                # 在后台线程中更新数据库状态
+                update_thread = threading.Thread(target=update_status, daemon=True, name=f"UpdateStatus-{trader_id}")
+                update_thread.start()
+                
                 logger.info(f"✓ 交易员 {trader_id} 已启动")
                 return True
             except Exception as e:
@@ -377,9 +390,22 @@ class TraderManager:
             
             trader = self.traders[trader_id]
             try:
+                logger.info(f"🔄 正在停止交易员 {trader_id}...")
                 trader.stop()
-                # 更新数据库状态
-                self._update_trader_running_status(trader_id, False)
+                logger.info(f"✅ 交易员 {trader_id} 的stop()方法已返回")
+                
+                # 更新数据库状态（改为后台执行，避免阻塞）
+                def update_status():
+                    try:
+                        self._update_trader_running_status(trader_id, False)
+                        logger.debug(f"✅ 交易员 {trader_id} 数据库状态已更新")
+                    except Exception as e:
+                        logger.error(f"❌ 更新交易员 {trader_id} 运行状态失败: {e}", exc_info=True)
+                
+                # 在后台线程中更新数据库状态
+                update_thread = threading.Thread(target=update_status, daemon=True, name=f"UpdateStatus-{trader_id}")
+                update_thread.start()
+                
                 logger.info(f"✓ 交易员 {trader_id} 已停止")
                 return True
             except Exception as e:
@@ -388,21 +414,85 @@ class TraderManager:
     
     def start_all_traders(self) -> int:
         """启动所有交易员"""
+        # 先获取所有trader信息（在锁内）
         with self._lock:
-            success_count = 0
-            for trader_id in list(self.traders.keys()):
-                if self.start_trader(trader_id):
-                    success_count += 1
-            return success_count
+            trader_ids = list(self.traders.keys())
+            traders_to_start = {tid: self.traders[tid] for tid in trader_ids}
+            logger.info(f"🔄 准备启动 {len(trader_ids)} 个交易员...")
+        
+        # 在锁外执行启动操作，避免死锁
+        success_count = 0
+        for i, trader_id in enumerate(trader_ids, 1):
+            logger.info(f"🔄 启动交易员 {i}/{len(trader_ids)}: {trader_id}")
+            trader = traders_to_start.get(trader_id)
+            if not trader:
+                logger.warning(f"⚠️ 交易员 {trader_id} 不存在")
+                continue
+            
+            try:
+                logger.info(f"🔄 正在启动交易员 {trader_id}...")
+                trader.start()
+                logger.info(f"✅ 交易员 {trader_id} 的start()方法已返回")
+                
+                # 更新数据库状态（后台执行）
+                def update_status():
+                    try:
+                        self._update_trader_running_status(trader_id, True)
+                        logger.debug(f"✅ 交易员 {trader_id} 数据库状态已更新")
+                    except Exception as e:
+                        logger.error(f"❌ 更新交易员 {trader_id} 运行状态失败: {e}", exc_info=True)
+                
+                update_thread = threading.Thread(target=update_status, daemon=True, name=f"UpdateStatus-{trader_id}")
+                update_thread.start()
+                
+                success_count += 1
+                logger.info(f"✅ 交易员 {trader_id} 启动成功 ({success_count}/{len(trader_ids)})")
+            except Exception as e:
+                logger.error(f"❌ 启动交易员 {trader_id} 失败: {e}", exc_info=True)
+        
+        logger.info(f"✅ 启动完成: {success_count}/{len(trader_ids)} 个交易员成功启动")
+        return success_count
     
     def stop_all_traders(self) -> int:
         """停止所有交易员"""
+        # 先获取所有trader信息（在锁内）
         with self._lock:
-            success_count = 0
-            for trader_id in list(self.traders.keys()):
-                if self.stop_trader(trader_id):
-                    success_count += 1
-            return success_count
+            trader_ids = list(self.traders.keys())
+            traders_to_stop = {tid: self.traders[tid] for tid in trader_ids}
+            logger.info(f"🔄 准备停止 {len(trader_ids)} 个交易员...")
+        
+        # 在锁外执行停止操作，避免死锁
+        success_count = 0
+        for i, trader_id in enumerate(trader_ids, 1):
+            logger.info(f"🔄 停止交易员 {i}/{len(trader_ids)}: {trader_id}")
+            trader = traders_to_stop.get(trader_id)
+            if not trader:
+                logger.warning(f"⚠️ 交易员 {trader_id} 不存在")
+                continue
+            
+            try:
+                logger.info(f"🔄 正在停止交易员 {trader_id}...")
+                trader.stop()
+                logger.info(f"✅ 交易员 {trader_id} 的stop()方法已返回")
+                
+                # 更新数据库状态（后台执行）
+                def update_status():
+                    try:
+                        self._update_trader_running_status(trader_id, False)
+                        logger.debug(f"✅ 交易员 {trader_id} 数据库状态已更新")
+                    except Exception as e:
+                        logger.error(f"❌ 更新交易员 {trader_id} 运行状态失败: {e}", exc_info=True)
+                
+                update_thread = threading.Thread(target=update_status, daemon=True, name=f"UpdateStatus-{trader_id}")
+                update_thread.start()
+                
+                success_count += 1
+                logger.info(f"✅ 交易员 {trader_id} 停止成功 ({success_count}/{len(trader_ids)})")
+            except Exception as e:
+                logger.error(f"❌ 停止交易员 {trader_id} 失败: {e}", exc_info=True)
+        
+        logger.info(f"✅ 停止完成: {success_count}/{len(trader_ids)} 个交易员成功停止")
+        return success_count
     
     def get_trader(self, trader_id: str):
         """获取指定交易员实例"""

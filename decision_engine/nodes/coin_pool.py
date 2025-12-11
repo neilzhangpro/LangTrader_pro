@@ -62,10 +62,13 @@ class CoinPool:
         
         # 3. Inside Coins - 内置AI评分（从 SymbolFilter 获取筛选后的币种）
         if self.trader_cfg.get('use_inside_coins'):
+            logger.info("开启了内置AI评分")
             if self.symbol_filter:
+                logger.info("symbol_filter is not None")
                 # 从 SymbolFilter 获取筛选后的币种（对应 Nofx 的 FilterSymbol）
                 filtered_symbols = self.symbol_filter.get_filtered_symbols()
-                
+                logger.info(f"filtered_symbols: {filtered_symbols}")
+                logger.info(f"is running: {self.symbol_filter._running}")
                 # 如果筛选结果为空，且筛选任务正在运行，等待筛选完成
                 if not filtered_symbols:
                     if hasattr(self.symbol_filter, '_running') and self.symbol_filter._running:
@@ -140,7 +143,7 @@ class CoinPool:
                     logger.debug(f"获取OI Top详细信息: {len(oi_top_data_map)}个币种")
             except Exception as e:
                 logger.warning(f"获取OI Top详细信息失败: {e}")
-        
+        logger.info("开始更新状态...")
         # 更新状态
         updated_state = {
             'candidate_symbols': unique_coins,
@@ -156,3 +159,4 @@ class CoinPool:
         
         logger.info(f"最终候选币种列表({len(unique_coins)}个): {unique_coins[:10]}{'...' if len(unique_coins) > 10 else ''}")
         return updated_state
+    

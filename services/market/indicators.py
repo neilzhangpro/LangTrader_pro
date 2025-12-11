@@ -59,6 +59,32 @@ class IndicatorCalculator:
         return float(atr.iloc[-1]) if not atr.empty else 0.0
     
     @staticmethod
+    def calculate_atr3(klines: List[Kline]) -> float:
+        """计算 ATR（3周期）- 用于4小时K线的短期波动率"""
+        return IndicatorCalculator.calculate_atr(klines, period=3)
+    
+    @staticmethod
+    def calculate_volume_stats(klines: List[Kline]) -> dict:
+        """计算成交量统计（当前成交量和平均成交量）"""
+        if not klines:
+            return {
+                'current_volume': 0.0,
+                'average_volume': 0.0
+            }
+        
+        df = pd.DataFrame([{
+            'volume': k.volume
+        } for k in klines])
+        
+        current_volume = float(df['volume'].iloc[-1]) if len(df) > 0 else 0.0
+        average_volume = float(df['volume'].mean()) if len(df) > 0 else 0.0
+        
+        return {
+            'current_volume': current_volume,
+            'average_volume': average_volume
+        }
+    
+    @staticmethod
     def calculate_series_indicators(klines: List[Kline], periods: List[int] = None) -> dict:
         """计算序列指标（用于历史分析）"""
         if periods is None:

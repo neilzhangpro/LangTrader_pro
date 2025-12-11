@@ -2,9 +2,14 @@ from decision_engine.state import DecisionState
 from utils.logger import logger
 from utils.llm_factory import LLMFactory
 from langchain_core.messages import HumanMessage, SystemMessage
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from pydantic import BaseModel, Field
 from datetime import datetime
+from decimal import Decimal
+
+if TYPE_CHECKING:
+    from config.settings import Settings
+    from services.decision_log_service import DecisionLogService
 
 
 class DecisionItem(BaseModel):
@@ -26,12 +31,36 @@ class DecisionOutput(BaseModel):
 
 
 class AIDecision:
-    def __init__(self, exchange_config: dict, trader_cfg: dict, exchange_service: Optional):
-        self.exchange_config = exchange_config
+    def __init__(
+        self, 
+        trader_cfg: dict, 
+        settings: Optional['Settings'] = None,
+        trader_id: Optional[str] = None
+    ):
+        """
+        初始化AI决策节点
+        
+        Args:
+            trader_cfg: 交易员配置
+            settings: 设置对象
+            trader_id: 交易员ID
+        """
         self.trader_cfg = trader_cfg
-        self.exchange_service = exchange_service
+        self.settings = settings
+        self.trader_id = trader_id
         self.llm = None  # 初始化为 None
         self.system_prompt = None
+        
+        # 初始化决策日志服务
+        if settings:
+            try:
+                from services.decision_log_service import DecisionLogService
+                self.decision_log_service = DecisionLogService(settings)
+            except Exception as e:
+                logger.warning(f"⚠️ 初始化决策日志服务失败: {e}")
+                self.decision_log_service = None
+        else:
+            self.decision_log_service = None
         
         if not self.trader_cfg.get('ai_model', {}).get('enabled', False):
             logger.debug("AI模型未启用，跳过AI决策")
@@ -72,53 +101,18 @@ class AIDecision:
         return LLMFactory.create_llm(ai_model_config)
        
     def _format_market_data(self, market_data_map: dict) -> str:
-        """格式化市场数据，保留K线但结构化展示"""
+        """格式化市场数据（仅显示关键信息，与NOFX维度一致）"""
         if not market_data_map:
             return "无市场数据"
         
         formatted_lines = []
         for symbol, data in market_data_map.items():
             current_price = data.get('current_price')
-            klines_3m = data.get('klines_3m', [])
-            klines_4h = data.get('klines_4h', [])
-            source = data.get('source', 'unknown')
-            
-            # 修复：先格式化价格，避免在格式说明符中使用三元表达式
             price_str = f"{current_price:.2f}" if current_price is not None else "N/A"
             
-            # 格式化3分钟K线（显示最近20根的关键信息）
-            klines_3m_str = ""
-            if klines_3m:
-                recent_3m = klines_3m[-20:] if len(klines_3m) > 20 else klines_3m
-                klines_3m_str = "\n".join([
-                    f"        [{i+1}] 时间: {kline.open_time if hasattr(kline, 'open_time') else 'N/A'}, "
-                    f"开: {kline.open:.2f}, 高: {kline.high:.2f}, 低: {kline.low:.2f}, "
-                    f"收: {kline.close:.2f}, 量: {kline.volume:.2f}"
-                    for i, kline in enumerate(recent_3m)
-                ])
-                if len(klines_3m) > 20:
-                    klines_3m_str += f"\n        ... (共 {len(klines_3m)} 根K线，仅显示最近20根)"
-            
-            # 格式化4小时K线（显示最近10根的关键信息）
-            klines_4h_str = ""
-            if klines_4h:
-                recent_4h = klines_4h[-10:] if len(klines_4h) > 10 else klines_4h
-                klines_4h_str = "\n".join([
-                    f"        [{i+1}] 时间: {kline.open_time if hasattr(kline, 'open_time') else 'N/A'}, "
-                    f"开: {kline.open:.2f}, 高: {kline.high:.2f}, 低: {kline.low:.2f}, "
-                    f"收: {kline.close:.2f}, 量: {kline.volume:.2f}"
-                    for i, kline in enumerate(recent_4h)
-                ])
-                if len(klines_4h) > 10:
-                    klines_4h_str += f"\n        ... (共 {len(klines_4h)} 根K线，仅显示最近10根)"
-            
-            formatted_lines.append(
-                f"  {symbol}:\n"
-                f"    - 当前价格: {price_str}\n"  # 使用预先格式化的字符串
-                f"    - 数据来源: {source}\n"
-                f"    - 3分钟K线数据 ({len(klines_3m)} 根):\n{klines_3m_str if klines_3m_str else '        无数据'}\n"
-                f"    - 4小时K线数据 ({len(klines_4h)} 根):\n{klines_4h_str if klines_4h_str else '        无数据'}"
-            )
+            # 只显示当前价格，不包含完整K线原始数据
+            # 序列数据已在 _format_signal_data() 中通过 _format_series_summary() 提供
+            formatted_lines.append(f"  {symbol}: 当前价格 {price_str}")
         
         return "\n".join(formatted_lines) if formatted_lines else "无市场数据"
 
@@ -147,6 +141,21 @@ class AIDecision:
             rsi7_4h = signals.get('rsi7_4h', 0)
             rsi14_4h = signals.get('rsi14_4h', 0)
             atr_4h = signals.get('atr_4h', 0)
+            atr3_4h = signals.get('atr3_4h', 0)
+            
+            # 成交量统计（4小时）
+            current_volume_4h = signals.get('current_volume_4h', 0)
+            average_volume_4h = signals.get('average_volume_4h', 0)
+            
+            # OpenInterest 和 FundingRate
+            open_interest = signals.get('open_interest')
+            open_interest_average = signals.get('open_interest_average')
+            funding_rate = signals.get('funding_rate')
+            
+            # 格式化持仓量和资金费率（先判断再格式化，避免f-string格式错误）
+            oi_str = f"{open_interest:.2f}" if open_interest is not None else "N/A"
+            oi_avg_str = f"{open_interest_average:.2f}" if open_interest_average is not None else "N/A"
+            funding_rate_str = f"{funding_rate:.2e}" if funding_rate is not None else "N/A"
             
             # 趋势判断
             price_vs_ema20_3m = "高于" if current_price > ema20_3m else "低于" if current_price < ema20_3m else "等于"
@@ -180,7 +189,15 @@ class AIDecision:
                 f"      - MACD: {macd_4h:.2f} ({macd_signal_4h})\n"
                 f"      - RSI7: {rsi7_4h:.2f}\n"
                 f"      - RSI14: {rsi14_4h:.2f} ({rsi_status_4h})\n"
-                f"      - ATR: {atr_4h:.2f} (波动率)\n"
+                f"      - ATR14: {atr_4h:.2f} (波动率)\n"
+                f"      - ATR3: {atr3_4h:.2f} (短期波动率)\n"
+                f"    【成交量统计（4小时）】\n"
+                f"      - 当前成交量: {current_volume_4h:.2f}\n"
+                f"      - 平均成交量: {average_volume_4h:.2f}\n"
+                f"    【持仓量与资金费率】\n"
+                f"      - 持仓量 (Latest): {oi_str}\n"
+                f"      - 持仓量 (Average): {oi_avg_str}\n"
+                f"      - 资金费率: {funding_rate_str}\n"
                 f"    【3分钟序列数据摘要】\n{intraday_summary if intraday_summary else '        无数据'}\n"
                 f"    【4小时序列数据摘要】\n{longer_term_summary if longer_term_summary else '        无数据'}"
             )
@@ -196,6 +213,7 @@ class AIDecision:
         ema20_values = series_data.get('ema20_values', [])
         macd_values = series_data.get('macd_values', [])
         rsi7_values = series_data.get('rsi7_values', [])
+        rsi14_values = series_data.get('rsi14_values', [])
         
         if not mid_prices:
             return ""
@@ -213,12 +231,14 @@ class AIDecision:
         ema20_recent = [format_value(e) for e in (ema20_values[-10:] if ema20_values else [])]
         macd_recent = [format_value(m) for m in (macd_values[-10:] if macd_values else [])]
         rsi7_recent = [format_value(r) for r in (rsi7_values[-10:] if rsi7_values else [])]
+        rsi14_recent = [format_value(r) for r in (rsi14_values[-10:] if rsi14_values else [])]
         
         return (
             f"        最近价格序列: {[f'{p:.2f}' for p in recent_prices]}\n"
             f"        最近EMA20序列: {ema20_recent}\n"
             f"        最近MACD序列: {macd_recent}\n"
-            f"        最近RSI7序列: {rsi7_recent}"
+            f"        最近RSI7序列: {rsi7_recent}\n"
+            f"        最近RSI14序列: {rsi14_recent}"
         )
 
     def _format_account_info(self, account_info: dict) -> str:
@@ -258,18 +278,83 @@ class AIDecision:
         
         formatted_lines = []
         for pos in positions:
+            logger.debug(f"持仓信息-------------->: {pos}")
             symbol = pos.get('symbol', 'N/A')
             side = pos.get('side', 'N/A')
-            size = pos.get('size', 0)
-            entry_price = pos.get('entry_price', 0)
-            mark_price = pos.get('mark_price', 0)
-            unrealized_pnl = pos.get('unrealized_pnl', 0)
-            leverage = pos.get('leverage', 1)
+            
+            # 安全获取数值字段，如果值为 None 则使用默认值
+            size = pos.get('size')
+            if size is None:
+                size = 0.0
+            else:
+                try:
+                    size = float(size)
+                except (ValueError, TypeError):
+                    size = 0.0
+            
+            entry_price = pos.get('entry_price')
+            if entry_price is None:
+                entry_price = 0.0
+            else:
+                try:
+                    entry_price = float(entry_price)
+                except (ValueError, TypeError):
+                    entry_price = 0.0
+            
+            mark_price = pos.get('mark_price')
+            if mark_price is None:
+                mark_price = 0.0
+            else:
+                try:
+                    mark_price = float(mark_price)
+                except (ValueError, TypeError):
+                    mark_price = 0.0
+            
+            unrealized_pnl = pos.get('unrealized_pnl')
+            if unrealized_pnl is None:
+                unrealized_pnl = 0.0
+            else:
+                try:
+                    unrealized_pnl = float(unrealized_pnl)
+                except (ValueError, TypeError):
+                    unrealized_pnl = 0.0
+            
+            leverage = pos.get('leverage')
+            if leverage is None:
+                leverage = 1
+            else:
+                try:
+                    leverage = int(leverage)
+                except (ValueError, TypeError):
+                    leverage = 1
+            
             liquidation_price = pos.get('liquidation_price')
             margin_used = pos.get('margin_used')
             update_time = pos.get('update_time')
             
-            pnl_percent = (unrealized_pnl / (entry_price * size)) * 100 if entry_price * size > 0 else 0
+            # 处理 liquidation_price 和 margin_used，确保它们要么是数字要么是 'N/A'
+            liquidation_price_str = "N/A"
+            if liquidation_price is not None:
+                try:
+                    liquidation_price_float = float(liquidation_price)
+                    liquidation_price_str = f"{liquidation_price_float:.2f}"
+                except (ValueError, TypeError):
+                    liquidation_price_str = "N/A"
+            
+            margin_used_str = "N/A"
+            if margin_used is not None:
+                try:
+                    margin_used_float = float(margin_used)
+                    margin_used_str = f"{margin_used_float:.2f}"
+                except (ValueError, TypeError):
+                    margin_used_str = "N/A"
+            
+            # 计算盈亏百分比（避免除以0）
+            if entry_price and size and entry_price * size > 0:
+                pnl_percent = (unrealized_pnl / (entry_price * size)) * 100
+            else:
+                pnl_percent = 0.0
+            
             pnl_status = "盈利" if unrealized_pnl > 0 else "亏损" if unrealized_pnl < 0 else "持平"
             
             # 格式化更新时间
@@ -289,11 +374,11 @@ class AIDecision:
                 f"    - 开仓价: {entry_price:.2f}\n"
                 f"    - 标记价: {mark_price:.2f}\n"
                 f"    - 未实现盈亏: {unrealized_pnl:+.2f} ({pnl_percent:+.2f}%) [{pnl_status}]\n"
-                f"    - 清算价格: {liquidation_price:.2f if liquidation_price else 'N/A'}\n"
-                f"    - 已用保证金: {margin_used:.2f if margin_used else 'N/A'} USDT\n"
+                f"    - 清算价格: {liquidation_price_str}\n"
+                f"    - 已用保证金: {margin_used_str} USDT\n"
                 f"    - 更新时间: {update_time_str}"
             )
-        
+        logger.debug(f"formatted_lines-------------->: {formatted_lines}")
         return "\n".join(formatted_lines) if formatted_lines else "无持仓"
     
     def _format_candidate_coins(self, coins: list, coin_sources: dict) -> str:
@@ -327,6 +412,79 @@ class AIDecision:
             )
         
         return "\n".join(formatted_lines) if formatted_lines else "无 OI Top 数据"
+    
+    def _format_performance(self, performance: Optional[dict]) -> str:
+        """格式化性能数据（夏普率等）"""
+        if not performance:
+            return "无性能数据"
+        
+        sharpe_ratio = performance.get('sharpe_ratio')
+        win_rate = performance.get('win_rate', 0.0)
+        total_trades = performance.get('total_trades', 0)
+        avg_return = performance.get('avg_return', 0.0)
+        total_pnl = performance.get('total_pnl', 0.0)
+        
+        lines = []
+        
+        # 夏普率
+        if sharpe_ratio is not None:
+            sharpe_str = f"{sharpe_ratio:.4f}"
+            # 添加状态说明
+            if sharpe_ratio < -0.5:
+                status = "持续亏损 - 建议停止交易，连续观望至少6个周期"
+            elif sharpe_ratio < 0:
+                status = "轻微亏损 - 严格控制，只做信心度>80的交易"
+            elif sharpe_ratio < 0.7:
+                status = "正收益 - 维持当前策略"
+            else:
+                status = "优异表现 - 可适度扩大仓位"
+            lines.append(f"- 夏普比率: {sharpe_str} ({status})")
+        else:
+            lines.append("- 夏普比率: N/A (数据不足)")
+        
+        # 其他指标
+        if total_trades > 0:
+            lines.append(f"- 总交易次数: {total_trades}")
+            lines.append(f"- 胜率: {win_rate:.2f}%")
+            lines.append(f"- 平均收益: {avg_return:.2f} USDT")
+            lines.append(f"- 总盈亏: {total_pnl:+.2f} USDT")
+        else:
+            lines.append("- 暂无交易记录")
+        
+        return "\n".join(lines) if lines else "无性能数据"
+
+    def _format_alerts(self, alerts: Optional[List[dict]]) -> str:
+        """格式化警报信息"""
+        if not alerts:
+            return "无市场警报"
+        
+        # 按严重程度分组
+        high_alerts = [a for a in alerts if a.get('severity') == 'high']
+        medium_alerts = [a for a in alerts if a.get('severity') == 'medium']
+        low_alerts = [a for a in alerts if a.get('severity') == 'low']
+        
+        lines = []
+        
+        if high_alerts:
+            lines.append("【高优先级警报】")
+            for alert in high_alerts:
+                lines.append(f"  ⚠️ {alert.get('message', 'N/A')}")
+        
+        if medium_alerts:
+            if lines:
+                lines.append("")
+            lines.append("【中等优先级警报】")
+            for alert in medium_alerts:
+                lines.append(f"  ⚠️ {alert.get('message', 'N/A')}")
+        
+        if low_alerts:
+            if lines:
+                lines.append("")
+            lines.append("【低优先级警报】")
+            for alert in low_alerts:
+                lines.append(f"  ℹ️ {alert.get('message', 'N/A')}")
+        
+        return "\n".join(lines) if lines else "无市场警报"
 
     def _build_user_prompt(self, state: DecisionState):
         """构建结构化的用户提示词，保留K线数据"""
@@ -337,27 +495,35 @@ class AIDecision:
         positions = state.get('positions', [])
         coin_sources = state.get('coin_sources', {})
         oi_top_data_map = state.get('oi_top_data_map', {})
+        performance = state.get('performance')
+        alerts = state.get('alerts')
         
-        # 获取详细账户信息
-        account_info = {}
-        if self.exchange_service:
-            try:
-                account_info = self.exchange_service.get_account_info()
-            except Exception as e:
-                logger.warning(f"无法获取详细账户信息: {e}")
-                # 如果获取失败，至少使用余额
-                if account_balance == 0.0:
-                    try:
-                        account_balance = self.exchange_service.get_balance()
-                    except Exception:
-                        pass
+        # 获取账户信息（从state获取）
+        account_info = {
+            'total_equity': account_balance,
+            'available_balance': account_balance,
+            'margin_used': 0.0,
+            'margin_used_pct': 0.0
+        }
         
+        # 获取当前持仓（从state获取）
+        positions = state.get('positions', [])
+        if positions:
+            logger.info(f"当前持仓: {len(positions)}个")
+
         # 获取杠杆配置
         btc_eth_leverage = self.trader_cfg.get('btc_eth_leverage', 5)
         altcoin_leverage = self.trader_cfg.get('altcoin_leverage', 5)
         
+        # 获取运行状态信息
+        runtime_minutes = state.get('runtime_minutes', 0)
+        call_count = state.get('call_count', 0)
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
         # 格式化各部分信息
         account_info_str = self._format_account_info(account_info)
+        performance_info = self._format_performance(performance)
+        alerts_info = self._format_alerts(alerts)
         market_info = self._format_market_data(market_data_map)
         signal_info = self._format_signal_data(signal_data_map)
         positions_info = self._format_positions(positions)
@@ -367,30 +533,40 @@ class AIDecision:
         user_prompt = f"""
 # 交易决策分析请求
 
-## 一、账户信息
+## 一、运行状态
+- 当前时间: {current_time}
+- 运行时长: {runtime_minutes} 分钟
+- 调用次数: {call_count}
+
+## 二、账户信息
 {account_info_str}
 - 当前持仓数量: {len(positions)} 个
 
-## 二、持仓详情
+## 三、性能分析
+{performance_info}
+
+## 四、持仓详情
 {positions_info}
 
-## 三、候选币种及来源
+## 五、候选币种及来源
 {candidate_coins_info}
 
-## 四、OI Top 数据（持仓量增长Top币种）
+## 六、OI Top 数据（持仓量增长Top币种）
 {oi_top_info}
 
-## 五、市场数据（包含K线数据）
+## 七、市场警报
+{alerts_info}
+
+## 八、市场数据与技术指标
 {market_info}
 
-## 六、技术信号分析（包含指标序列数据）
 {signal_info}
 
-## 七、交易配置
+## 九、交易配置
 - BTC/ETH 杠杆上限: {btc_eth_leverage}x
 - 山寨币杠杆上限: {altcoin_leverage}x
 
-## 八、决策要求
+## 十、决策要求
 请根据以上信息，对每个候选币种和现有持仓进行综合分析，并给出交易决策：
 
 ### 对于候选币种（开仓决策）：
@@ -426,7 +602,23 @@ class AIDecision:
 - reasoning: 决策理由（需引用具体的K线形态、指标信号、OI Top数据等）
 
 ### 重要约束：
-1. 风险回报比必须≥3:1（收益/风险 ≥ 3）
+1. **风险回报比必须≥3:1（收益/风险 ≥ 3）**
+   - 这是硬性要求，所有开仓决策必须满足此条件
+   - 计算方法：
+     * 做多：风险 = 当前价格 - 止损价格，收益 = 止盈价格 - 当前价格，风险回报比 = 收益 / 风险
+     * 做空：风险 = 止损价格 - 当前价格，收益 = 当前价格 - 止盈价格，风险回报比 = 收益 / 风险
+   - 示例（做多）：
+     * 当前价格：100 USDT
+     * 止损价格：95 USDT（风险 = 5 USDT）
+     * 止盈价格：115 USDT（收益 = 15 USDT）
+     * 风险回报比 = 15 / 5 = 3.0:1 ✓ 满足要求
+   - 示例（做空）：
+     * 当前价格：100 USDT
+     * 止损价格：105 USDT（风险 = 5 USDT）
+     * 止盈价格：85 USDT（收益 = 15 USDT）
+     * 风险回报比 = 15 / 5 = 3.0:1 ✓ 满足要求
+   - **重要**：设置止损和止盈时，必须确保风险回报比≥3.0，否则决策将被拒绝
+
 2. BTC/ETH 单币种仓位价值不能超过账户净值的10倍
 3. 山寨币单币种仓位价值不能超过账户净值的1.5倍
 4. 开仓操作必须提供完整的杠杆、仓位大小、止损、止盈参数
@@ -439,6 +631,7 @@ class AIDecision:
 
     def run(self, state: DecisionState) -> DecisionState:
         """执行AI决策"""
+        logger.info(f"AI决策节点执行，LLM: {self.llm}")
         if not hasattr(self, 'llm') or self.llm is None:
             logger.error("LLM未初始化，AI模型可能未启用或初始化失败")
             return state
@@ -453,6 +646,7 @@ class AIDecision:
             ]
             
             logger.info("调用LLM进行决策...")
+            logger.debug(f"用户提示词: {user_prompt}")
             response = self.llm.invoke(messages)
             
             # 使用结构化输出，直接获取DecisionOutput对象
@@ -470,6 +664,8 @@ class AIDecision:
                     'decisions': decisions,
                     'raw_response': None  # 结构化输出不包含原始响应
                 }
+                
+                # 注意：决策日志保存已移至 Risk_check 节点之后
             else:
                 # 回退到手动解析（如果结构化输出未启用）
                 logger.warning("收到非结构化响应，尝试手动解析")
@@ -490,10 +686,13 @@ class AIDecision:
                         decisions = json.loads(response_text)
                         decision_count = len(decisions) if isinstance(decisions, list) else 1
                         logger.info(f"AI决策完成，共{decision_count}个决策")
+                        decisions_list = decisions if isinstance(decisions, list) else [decisions]
                         state['ai_decision'] = {
-                            'decisions': decisions if isinstance(decisions, list) else [decisions],
+                            'decisions': decisions_list,
                             'raw_response': response.content
                         }
+                        
+                        # 注意：决策日志保存已移至 Risk_check 节点之后
                     except json.JSONDecodeError as e:
                         logger.error(f"JSON解析失败: {e}")
                         state['ai_decision'] = {
@@ -511,3 +710,53 @@ class AIDecision:
         except Exception as e:
             logger.error(f"AI决策执行失败: {e}", exc_info=True)
             return state
+    
+    def _save_decision_logs(self, decisions: List[Dict], state: DecisionState):
+        """保存决策日志到数据库"""
+        if not self.decision_log_service or not self.trader_id:
+            logger.debug("决策日志服务未初始化或 trader_id 不存在，跳过保存")
+            return
+        
+        # 准备状态快照（只保存关键信息，避免数据过大）
+        state_snapshot = {
+            'candidate_symbols': state.get('candidate_symbols', []),
+            'positions': state.get('positions', []),
+            'account_balance': state.get('account_balance'),
+            'market_data_map_keys': list(state.get('market_data_map', {}).keys()),
+            'signal_data_map_keys': list(state.get('signal_data_map', {}).keys()),
+            'call_count': state.get('call_count'),
+            'runtime_minutes': state.get('runtime_minutes'),
+        }
+        
+        # 为每个决策保存日志
+        for decision in decisions:
+            try:
+                symbol = decision.get('symbol', '')
+                action = decision.get('action', '')
+                reasoning = decision.get('reasoning', '')
+                confidence = decision.get('confidence')
+                
+                if not symbol:
+                    logger.warning("⚠️ 决策缺少 symbol，跳过保存")
+                    continue
+                
+                # 转换置信度
+                confidence_decimal = None
+                if confidence is not None:
+                    try:
+                        confidence_decimal = Decimal(str(confidence))
+                    except Exception as e:
+                        logger.warning(f"⚠️ 转换置信度失败: {e}")
+                
+                # 保存决策日志
+                self.decision_log_service.record_decision(
+                    trader_id=self.trader_id,
+                    symbol=symbol,
+                    decision_state=state_snapshot,
+                    decision_result=action,
+                    reasoning=reasoning,
+                    confidence=confidence_decimal
+                )
+            except Exception as e:
+                logger.warning(f"⚠️ 保存决策日志失败: {symbol} - {e}", exc_info=True)
+                # 继续处理其他决策，不中断流程
